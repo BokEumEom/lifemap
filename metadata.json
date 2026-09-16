@@ -1,0 +1,6 @@
+{
+  "name": "LifeMap",
+  "description": "Minimalist map-centric lifelog and daily timeline app with photo trails, location memory, and AI reflections.",
+  "requestFramePermissions": ["geolocation"],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
