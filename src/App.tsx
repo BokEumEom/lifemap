@@ -11,59 +11,22 @@ import { AddPlaceModal } from './components/AddPlaceModal';
 import { PhotoImportModal } from './components/PhotoImportModal';
 import { PhotoLightbox } from './components/PhotoLightbox';
 import { SearchModal } from './components/SearchModal';
-import { DeviceFrame } from './components/DeviceFrame';
 import { PlaceDetailCard } from './components/PlaceDetailCard';
 import { calculateDistanceKm } from './utils/geoUtils';
 
-const STORAGE_DAYS_KEY = 'lifemap_days_v2';
-const STORAGE_SETTINGS_KEY = 'lifemap_settings_v2';
+const STORAGE_DAYS_KEY = 'lifemap_days_korea_v4';
+const STORAGE_SETTINGS_KEY = 'lifemap_settings_v3';
 
 export default function App() {
-  // Load saved days or fallback to initial video demo days
+  // Load saved days or fallback to initial Korean tour demo days
   const [days, setDays] = useState<Record<string, DayLog>>(() => {
     try {
       const saved = localStorage.getItem(STORAGE_DAYS_KEY);
       if (saved) {
         const parsed: Record<string, DayLog> = JSON.parse(saved);
-        // Enrich saved days with Korean translations and latest metadata from INITIAL_DAYS
+        // Ensure Korean datasets exist
         Object.keys(INITIAL_DAYS).forEach((dateKey) => {
-          if (parsed[dateKey]) {
-            const initDay = INITIAL_DAYS[dateKey];
-            if (!parsed[dateKey].titleKo && initDay.titleKo) parsed[dateKey].titleKo = initDay.titleKo;
-            if (!parsed[dateKey].titleEn && initDay.titleEn) parsed[dateKey].titleEn = initDay.titleEn;
-            if (!parsed[dateKey].dailyNoteKo && initDay.dailyNoteKo) parsed[dateKey].dailyNoteKo = initDay.dailyNoteKo;
-            if (initDay.summaryMeta) {
-              parsed[dateKey].summaryMeta = {
-                ...initDay.summaryMeta,
-                ...parsed[dateKey].summaryMeta,
-              };
-            }
-            if (initDay.aiRecap) {
-              parsed[dateKey].aiRecap = {
-                ...initDay.aiRecap,
-                ...parsed[dateKey].aiRecap,
-              };
-            }
-            if (Array.isArray(parsed[dateKey].places)) {
-              parsed[dateKey].places = parsed[dateKey].places.map((p: PlaceLog) => {
-                const initPlace = initDay.places.find((ip) => ip.id === p.id);
-                if (initPlace) {
-                  return {
-                    ...initPlace,
-                    ...p,
-                    nameKo: p.nameKo || initPlace.nameKo,
-                    nameEn: p.nameEn || initPlace.nameEn,
-                    addressKo: p.addressKo || initPlace.addressKo,
-                    addressEn: p.addressEn || initPlace.addressEn,
-                    noteKo: p.noteKo || initPlace.noteKo,
-                    noteEn: p.noteEn || initPlace.noteEn,
-                    noteQuoteKo: p.noteQuoteKo || initPlace.noteQuoteKo,
-                  };
-                }
-                return p;
-              });
-            }
-          } else {
+          if (!parsed[dateKey]) {
             parsed[dateKey] = INITIAL_DAYS[dateKey];
           }
         });
@@ -75,8 +38,8 @@ export default function App() {
     return INITIAL_DAYS;
   });
 
-  // Default to the video date: 2026-09-12 (Oita City trip)
-  const [currentDate, setCurrentDate] = useState<string>('2026-09-12');
+  // Default to Korean Seongsu-dong tour: 2026-09-18
+  const [currentDate, setCurrentDate] = useState<string>('2026-09-18');
 
   // Active Bottom Navigation Tab: 'map' (named '스팟' in Korean)
   const [activeTab, setActiveTab] = useState<TabType>('map');
@@ -96,7 +59,6 @@ export default function App() {
           syncOption: parsed.syncOption || 'local',
           autoTrackLocation: Boolean(parsed.autoTrackLocation),
           threeDBuildingView: Boolean(parsed.threeDBuildingView),
-          frameMode: parsed.frameMode || 'device',
         };
       }
     } catch (e) {
@@ -111,7 +73,6 @@ export default function App() {
       syncOption: 'local',
       autoTrackLocation: false,
       threeDBuildingView: false,
-      frameMode: 'device',
     };
   });
 
@@ -177,14 +138,6 @@ export default function App() {
   // Update Settings
   const handleUpdateSettings = (newSettings: Partial<AppSettings>) => {
     setSettings((prev) => ({ ...prev, ...newSettings }));
-  };
-
-  // Toggle Frame Mode (device vs fullscreen)
-  const handleToggleFrameMode = () => {
-    setSettings((prev) => ({
-      ...prev,
-      frameMode: prev.frameMode === 'device' ? 'fullscreen' : 'device',
-    }));
   };
 
   // Update DayLog
@@ -317,6 +270,16 @@ export default function App() {
     ? currentDayLog.places.findIndex((p) => p.id === selectedPlaceId)
     : -1;
 
+  // Ensure selectedPlaceId is cleared if place doesn't exist on current day
+  useEffect(() => {
+    if (selectedPlaceId && currentDayLog) {
+      const exists = currentDayLog.places.some((p) => p.id === selectedPlaceId);
+      if (!exists) {
+        setSelectedPlaceId(null);
+      }
+    }
+  }, [selectedPlaceId, currentDayLog]);
+
   const handlePrevPlace = () => {
     if (!currentDayLog || currentDayLog.places.length === 0 || !selectedPlaceId) return;
     const idx = currentDayLog.places.findIndex((p) => p.id === selectedPlaceId);
@@ -332,12 +295,8 @@ export default function App() {
   };
 
   return (
-    <DeviceFrame
-      settings={settings}
-      onToggleFrameMode={handleToggleFrameMode}
-      isSimulating={isSimulating}
-    >
-      <div className="flex flex-col h-full w-full overflow-hidden bg-stone-50 dark:bg-stone-950 text-stone-900 dark:text-stone-100 transition-colors">
+    <div className="w-full h-full min-h-[100dvh] max-h-[100dvh] flex flex-col items-center justify-center bg-stone-100 dark:bg-stone-950 overflow-hidden select-none">
+      <div className="relative w-full h-full max-w-lg mx-auto flex flex-col bg-stone-50 dark:bg-stone-950 text-stone-900 dark:text-stone-100 overflow-hidden shadow-none sm:shadow-2xl sm:border-x sm:border-stone-200/80 dark:sm:border-stone-800/80 transition-colors">
         {/* Top Navigation Bar */}
         <Navbar
           currentDate={currentDate}
@@ -378,6 +337,8 @@ export default function App() {
               onExpandTimeline={() => setActiveTab('timeline')}
               onPrevDay={handlePrevDay}
               onNextDay={handleNextDay}
+              onSelectDate={setCurrentDate}
+              availableDates={availableDates}
             />
           )}
 
@@ -436,60 +397,71 @@ export default function App() {
         />
 
         {/* Modals & Overlays */}
-        <AddPlaceModal
-          isOpen={isAddModalOpen}
-          onClose={() => {
-            setIsAddModalOpen(false);
-            setAddModalInitialCoords(null);
-            setAddModalInitialPhotos(null);
-          }}
-          onSavePlace={handleSavePlace}
-          settings={settings}
-          initialCoords={addModalInitialCoords}
-          initialPhotos={addModalInitialPhotos}
-        />
+        {isAddModalOpen && (
+          <AddPlaceModal
+            isOpen={isAddModalOpen}
+            onClose={() => {
+              setIsAddModalOpen(false);
+              setAddModalInitialCoords(null);
+              setAddModalInitialPhotos(null);
+            }}
+            onSavePlace={handleSavePlace}
+            settings={settings}
+            initialCoords={addModalInitialCoords}
+            initialPhotos={addModalInitialPhotos}
+          />
+        )}
 
-        <PhotoImportModal
-          isOpen={isPhotoImportModalOpen}
-          onClose={() => setIsPhotoImportModalOpen(false)}
-          dayLog={currentDayLog}
-          onAddPhotosToPlace={handleAddPhotosToPlace}
-          settings={settings}
-          onCreateNewPlaceWithPhotos={(photos, coords) => {
-            setIsPhotoImportModalOpen(false);
-            setAddModalInitialPhotos(photos);
-            if (coords) {
-              setAddModalInitialCoords(coords);
-            }
-            setIsAddModalOpen(true);
-          }}
-        />
+        {isPhotoImportModalOpen && (
+          <PhotoImportModal
+            isOpen={isPhotoImportModalOpen}
+            onClose={() => setIsPhotoImportModalOpen(false)}
+            dayLog={currentDayLog}
+            onAddPhotosToPlace={handleAddPhotosToPlace}
+            settings={settings}
+            onCreateNewPlaceWithPhotos={(photos, coords) => {
+              setIsPhotoImportModalOpen(false);
+              setAddModalInitialPhotos(photos);
+              if (coords) {
+                setAddModalInitialCoords(coords);
+              }
+              setIsAddModalOpen(true);
+            }}
+          />
+        )}
 
-        <PhotoLightbox
-          url={lightboxPhoto?.url || null}
-          caption={lightboxPhoto?.caption}
-          onClose={() => setLightboxPhoto(null)}
-        />
+        {lightboxPhoto && (
+          <PhotoLightbox
+            url={lightboxPhoto.url}
+            caption={lightboxPhoto.caption}
+            onClose={() => setLightboxPhoto(null)}
+          />
+        )}
 
-        <SearchModal
-          isOpen={isSearchOpen}
-          onClose={() => setIsSearchOpen(false)}
-          days={days}
-          settings={settings}
-          onSelectPlaceResult={(date, placeId) => {
-            setCurrentDate(date);
-            setSelectedPlaceId(placeId);
-            setActiveTab('map');
-          }}
-        />
+        {isSearchOpen && (
+          <SearchModal
+            isOpen={isSearchOpen}
+            onClose={() => setIsSearchOpen(false)}
+            days={days}
+            settings={settings}
+            onSelectPlaceResult={(date, placeId) => {
+              setCurrentDate(date);
+              setSelectedPlaceId(placeId);
+              setActiveTab('map');
+            }}
+          />
+        )}
 
         {/* MOBILE BOTTOM SHEET FOR SELECTED PLACE */}
         {selectedPlace && (
           <div className="absolute inset-0 z-50 flex flex-col justify-end pointer-events-none">
             {/* Backdrop Scrim - Softened so map is clear and visible behind */}
             <div
-              className="absolute inset-0 bg-black/20 backdrop-blur-[1px] transition-opacity duration-300 pointer-events-auto animate-in fade-in"
-              onClick={() => setSelectedPlaceId(null)}
+              className="absolute inset-0 bg-black/25 backdrop-blur-[1px] transition-opacity duration-300 pointer-events-auto animate-in fade-in"
+              onClick={(e) => {
+                e.stopPropagation();
+                setSelectedPlaceId(null);
+              }}
             />
             {/* Sliding Bottom Sheet Card */}
             <div className="relative z-10 w-full animate-in slide-in-from-bottom duration-300 pointer-events-auto">
@@ -515,6 +487,6 @@ export default function App() {
           </div>
         )}
       </div>
-    </DeviceFrame>
+    </div>
   );
 }

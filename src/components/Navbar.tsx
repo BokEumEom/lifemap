@@ -29,16 +29,26 @@ export const Navbar: React.FC<NavbarProps> = ({
   const [showDatePicker, setShowDatePicker] = useState(false);
   const t = translations[settings.language];
 
-  // Navigate to previous day
+  // Navigate to previous day (preferring logged dates with spots)
   const handlePrevDay = () => {
+    const idx = availableDates.indexOf(currentDate);
+    if (idx !== -1 && idx < availableDates.length - 1) {
+      onSelectDate(availableDates[idx + 1]);
+      return;
+    }
     const d = new Date(currentDate);
     d.setDate(d.getDate() - 1);
     const prevStr = d.toISOString().split('T')[0];
     onSelectDate(prevStr);
   };
 
-  // Navigate to next day
+  // Navigate to next day (preferring logged dates with spots)
   const handleNextDay = () => {
+    const idx = availableDates.indexOf(currentDate);
+    if (idx > 0) {
+      onSelectDate(availableDates[idx - 1]);
+      return;
+    }
     const d = new Date(currentDate);
     d.setDate(d.getDate() + 1);
     const nextStr = d.toISOString().split('T')[0];
@@ -146,8 +156,13 @@ export const Navbar: React.FC<NavbarProps> = ({
                   >
                     <span>{formatDayTitle(d, settings.language)}</span>
                     {d === '2026-09-12' && (
-                      <span className="text-[10px] bg-pink-100 dark:bg-pink-900 text-pink-700 dark:text-pink-300 px-1.5 py-0.2 rounded-full">
-                        {settings.language === 'ja' ? '大分' : 'Oita'}
+                      <span className="text-[10px] font-bold bg-pink-100 dark:bg-pink-900/60 text-pink-700 dark:text-pink-300 px-2 py-0.5 rounded-full">
+                        {settings.language === 'ko' ? '오이타 12곳' : settings.language === 'ja' ? '大分 12ヶ所' : 'Oita (12)'}
+                      </span>
+                    )}
+                    {d === '2026-09-15' && (
+                      <span className="text-[10px] font-bold bg-amber-100 dark:bg-amber-900/60 text-amber-700 dark:text-amber-300 px-2 py-0.5 rounded-full">
+                        {settings.language === 'ko' ? '벳푸 온천 4곳' : settings.language === 'ja' ? '別府温泉 4ヶ所' : 'Beppu (4)'}
                       </span>
                     )}
                   </button>

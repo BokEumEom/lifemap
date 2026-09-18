@@ -2,7 +2,6 @@ import React, { useState } from 'react';
 import {
   Heart,
   Plus,
-  Sparkles,
   ChevronLeft,
   ChevronRight,
   ChevronDown,
@@ -46,9 +45,12 @@ export const TimelineView: React.FC<TimelineViewProps> = ({
   onPrevDay,
   onNextDay,
 }) => {
-  const [isGeneratingAi, setIsGeneratingAi] = useState(false);
-  const [memoInput, setMemoInput] = useState('');
+  const [memoInput, setMemoInput] = useState(dayLog?.dailyNote || '');
   const [activeBottomCard, setActiveBottomCard] = useState<'memory' | 'overview' | 'map'>('memory');
+
+  React.useEffect(() => {
+    setMemoInput(dayLog?.dailyNote || '');
+  }, [dayLog?.date, dayLog?.dailyNote]);
 
   const t = translations[settings.language];
 
@@ -76,7 +78,7 @@ export const TimelineView: React.FC<TimelineViewProps> = ({
   }
 
   // Count totals
-  const totalPhotos = dayLog.places.reduce((acc, p) => acc + p.photos.length, 0);
+  const totalPhotos = dayLog.places.reduce((acc, p) => acc + (p.photos?.length || 0), 0);
   const spotsCount = dayLog.places.length;
   const stepsCount = dayLog.steps || 10738;
   const distanceKm = dayLog.totalDistanceKm || 6.5;
@@ -101,43 +103,6 @@ export const TimelineView: React.FC<TimelineViewProps> = ({
       ...dayLog,
       places: updated,
     });
-  };
-
-  // Generate AI Recap
-  const handleGenerateAiRecap = async () => {
-    setIsGeneratingAi(true);
-    try {
-      const response = await fetch('/api/ai-recap', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          date: dayLog.date,
-          places: dayLog.places,
-          totalDistanceKm: dayLog.totalDistanceKm,
-          steps: dayLog.steps,
-          language: settings.language,
-          userNotes: memoInput || dayLog.dailyNote || '',
-        }),
-      });
-
-      if (response.ok) {
-        const data = await response.json();
-        onUpdateDayLog({
-          ...dayLog,
-          aiRecap: {
-            recap: data.recap,
-            mood: data.mood,
-            highlight: data.highlight,
-            generatedAt: new Date().toISOString(),
-            isAppleIntelligence: true,
-          },
-        });
-      }
-    } catch (err) {
-      console.error('AI recap error:', err);
-    } finally {
-      setIsGeneratingAi(false);
-    }
   };
 
   const formattedDate = formatDayTitle(dayLog.date, settings.language);
@@ -288,7 +253,7 @@ export const TimelineView: React.FC<TimelineViewProps> = ({
 
               {/* Horizontal Photo Scroll with rounded thumbnails + "+" button */}
               <div className="flex items-center gap-2.5 overflow-x-auto no-scrollbar pb-2">
-                {place.photos.map((photo) => {
+                {(place.photos || []).map((photo) => {
                   const caption = getPhotoCaption(photo, settings.language, getPlaceName(place, settings.language));
                   return (
                     <div
@@ -379,28 +344,63 @@ export const TimelineView: React.FC<TimelineViewProps> = ({
             </h3>
           </div>
 
-          {/* Memo Input Field: この日のことを書く */}
+          {/* Memo Input Field: この日のメモ */}
           <div className="space-y-2">
-            <input
-              type="text"
-              value={memoInput}
-              onChange={(e) => setMemoInput(e.target.value)}
-              placeholder={t.timeline.dailyMemoPlaceholder || 'この日のことを書く...'}
-              className="w-full text-xs p-3 rounded-2xl bg-stone-50 dark:bg-stone-800/60 border border-stone-200 dark:border-stone-700/60 text-stone-800 dark:text-stone-200 placeholder:text-stone-400 focus:outline-none focus:ring-2 focus:ring-pink-500"
-            />
+            <div className="flex items-center gap-2">
+              <input
+                type="text"
+                value={memoInput}
+                onChange={(e) => setMemoInput(e.target.value)}
+                onBlur={() => {
+                  if (memoInput !== (dayLog.dailyNote || '')) {
+                    onUpdateDayLog({
+                      ...dayLog,
+                      dailyNote: memoInput,
+                    });
+                  }
+                }}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter') {
+                    onUpdateDayLog({
+                      ...dayLog,
+                      dailyNote: memoInput,
+                    });
+                  }
+                }}
+                placeholder={t.timeline.dailyMemoPlaceholder || (settings.language === 'ko' ? '이 날의 하루 메모 남기기...' : 'この日のメモを書く...')}
+                className="flex-1 text-xs p-3 rounded-2xl bg-stone-50 dark:bg-stone-800/60 border border-stone-200 dark:border-stone-700/60 text-stone-800 dark:text-stone-200 placeholder:text-stone-400 focus:outline-none focus:ring-2 focus:ring-pink-500"
+              />
+              {memoInput !== (dayLog.dailyNote || '') && (
+                <button
+                  type="button"
+                  onClick={() => {
+                    onUpdateDayLog({
+                      ...dayLog,
+                      dailyNote: memoInput,
+                    });
+                  }}
+                  className="px-3.5 py-2.5 rounded-2xl bg-pink-500 text-white font-bold text-xs hover:bg-pink-600 transition active:scale-95 flex-shrink-0"
+                >
+                  {settings.language === 'ko' ? '저장' : '保存'}
+                </button>
+              )}
+            </div>
           </div>
 
-          {/* Button: ✨ この日のことを書いてもらう */}
-          <button
-            onClick={handleGenerateAiRecap}
-            disabled={isGeneratingAi}
-            className="w-full flex items-center justify-center gap-2 py-3 px-4 rounded-2xl font-bold text-xs bg-gradient-to-r from-pink-500 to-rose-500 hover:from-pink-600 hover:to-rose-600 text-white shadow-md transition active:scale-[0.99] disabled:opacity-50"
-          >
-            <Sparkles className={`w-4 h-4 ${isGeneratingAi ? 'animate-spin' : ''}`} />
-            <span>
-              {isGeneratingAi ? t.timeline.regenerating : t.timeline.generateAiRecap || 'この日のことを書いてもらう'}
-            </span>
-          </button>
+          {/* Daily Note (User's personal note) Display if saved */}
+          {dayLog.dailyNote && (
+            <div className="bg-stone-50 dark:bg-stone-800/40 rounded-2xl p-3.5 border border-stone-200/60 dark:border-stone-700/60 flex items-start gap-2.5">
+              <MessageSquareQuote className="w-4 h-4 text-pink-500 flex-shrink-0 mt-0.5" />
+              <div className="flex-1">
+                <p className="text-xs text-stone-800 dark:text-stone-200 leading-relaxed font-medium">
+                  {dayLog.dailyNote}
+                </p>
+                <span className="text-[10px] text-stone-400 mt-1 block">
+                  {settings.language === 'ko' ? '나의 하루 메모' : 'マイメモ'}
+                </span>
+              </div>
+            </div>
+          )}
 
           {/* Summary Chips (Video Matching): 大分県, カフェ 3か所, ステップ 3か所, レストラン 2か所, 3.2 km, 初めて 12か所 */}
           <div className="flex flex-wrap gap-1.5 pt-1">
@@ -423,23 +423,6 @@ export const TimelineView: React.FC<TimelineViewProps> = ({
               {settings.language === 'ko' ? '처음' : '初めて'} {dayLog.summaryMeta?.firstVisitCount || 12}{settings.language === 'ko' ? '곳' : 'か所'}
             </span>
           </div>
-
-          {/* Apple Intelligence Generated Summary Box */}
-          {dayLog.aiRecap && (
-            <div className="bg-stone-50 dark:bg-stone-800/40 rounded-2xl p-4 border border-stone-200/60 dark:border-stone-700/60 space-y-3">
-              <p className="text-xs text-stone-800 dark:text-stone-200 leading-relaxed font-normal">
-                {settings.language === 'ko' ? (dayLog.aiRecap.recapKo || dayLog.aiRecap.recap) : dayLog.aiRecap.recap}
-              </p>
-
-              <div className="flex items-center justify-between text-[11px] text-stone-400 dark:text-stone-500 pt-1 border-t border-stone-200/40 dark:border-stone-700/40">
-                <span className="flex items-center gap-1 font-medium text-pink-600 dark:text-pink-400">
-                  <span>✦</span>
-                  <span>{settings.language === 'ko' ? 'Apple Intelligence 가 생성했습니다' : 'Apple Intelligence が生成しました'}</span>
-                </span>
-                <span className="text-[10px]">LifeMap AI</span>
-              </div>
-            </div>
-          )}
 
           {/* 3 Mini Bottom Cards (Matching Video 00:30): [メモリー] [概要] [地図] */}
           <div className="grid grid-cols-3 gap-2 pt-2">

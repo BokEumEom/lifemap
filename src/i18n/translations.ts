@@ -189,9 +189,6 @@ export const translations = {
       cloudGDrive: 'Google Drive',
       resetDemo: 'サンプルの大分県ログを再読み込み',
       resetConfirm: '動画準拠のサンプルデータにリセットしますか？',
-      deviceFrame: 'フレーム表示モード',
-      frameDevice: '📱 iPhone 16 Pro モックアップ',
-      frameFull: '🖥️ フルスクリーン表示',
     }
   },
   ko: {
@@ -382,9 +379,6 @@ export const translations = {
       cloudGDrive: 'Google Drive',
       resetDemo: '영상 속 오이타 샘플 데이터 재적용',
       resetConfirm: '샘플 데이터로 리셋하시겠습니까? 현재 변경사항이 초기화됩니다.',
-      deviceFrame: '프레임 표시 모드',
-      frameDevice: '📱 iPhone 16 Pro 목업 프레임',
-      frameFull: '🖥️ 전체 화면 표시',
     }
   },
   en: {
@@ -575,9 +569,6 @@ export const translations = {
       cloudGDrive: 'Google Drive',
       resetDemo: 'Reload Video Sample Data (Oita)',
       resetConfirm: 'Reset to curated sample days from video? Current entries may be overwritten.',
-      deviceFrame: 'Display Frame Mode',
-      frameDevice: '📱 iPhone 16 Pro Mockup',
-      frameFull: '🖥️ Fullscreen Canvas',
     }
   }
 };

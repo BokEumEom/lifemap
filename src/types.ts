@@ -121,6 +121,5 @@ export interface AppSettings {
   syncOption: 'local' | 'icloud' | 'gdrive';
   autoTrackLocation: boolean;
   threeDBuildingView: boolean;
-  frameMode: 'device' | 'fullscreen';
 }
 

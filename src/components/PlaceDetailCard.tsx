@@ -66,6 +66,8 @@ export const PlaceDetailCard: React.FC<PlaceDetailCardProps> = ({
   const displayNote = getPlaceNote(place, settings.language);
   const displayQuote = getPlaceNoteQuote(place, settings.language);
 
+  const safePhotos = Array.isArray(place.photos) ? place.photos : [];
+
   const handleToggleFavorite = () => {
     onUpdatePlace({ ...place, isFavorite: !place.isFavorite });
   };
@@ -87,7 +89,7 @@ export const PlaceDetailCard: React.FC<PlaceDetailCardProps> = ({
     onUpdatePlace({
       ...place,
       coverPhotoUrl: photoUrl,
-      photos: place.photos.map((p) => ({
+      photos: safePhotos.map((p) => ({
         ...p,
         isCover: p.url === photoUrl,
       })),
@@ -95,7 +97,7 @@ export const PlaceDetailCard: React.FC<PlaceDetailCardProps> = ({
   };
 
   const handleDeletePhoto = (photoId: string) => {
-    const updatedPhotos = place.photos.filter((p) => p.id !== photoId);
+    const updatedPhotos = safePhotos.filter((p) => p.id !== photoId);
     let updatedCover = place.coverPhotoUrl;
     if (place.coverPhotoUrl && !updatedPhotos.some((p) => p.url === place.coverPhotoUrl)) {
       updatedCover = updatedPhotos[0]?.url;
@@ -115,12 +117,12 @@ export const PlaceDetailCard: React.FC<PlaceDetailCardProps> = ({
       url: newPhotoUrl.trim(),
       caption: displayName,
       captionKo: displayName,
-      isCover: place.photos.length === 0,
+      isCover: safePhotos.length === 0,
     };
     onUpdatePlace({
       ...place,
-      photos: [...place.photos, newPhoto],
-      coverPhotoUrl: place.photos.length === 0 ? newPhoto.url : place.coverPhotoUrl,
+      photos: [...safePhotos, newPhoto],
+      coverPhotoUrl: safePhotos.length === 0 ? newPhoto.url : place.coverPhotoUrl,
     });
     setNewPhotoUrl('');
     setShowAddPhotoInput(false);
@@ -148,8 +150,8 @@ export const PlaceDetailCard: React.FC<PlaceDetailCardProps> = ({
   return (
     <div
       id="place-detail-card"
-      className={`bg-white/98 dark:bg-stone-900/98 backdrop-blur-xl border border-stone-200/90 dark:border-stone-800/90 rounded-t-[32px] sm:rounded-t-[32px] shadow-2xl overflow-hidden transition-all duration-300 flex flex-col w-full ${
-        isExpanded ? 'max-h-[82vh]' : 'max-h-[44vh] sm:max-h-[48vh]'
+      className={`bg-white/98 dark:bg-stone-900/98 backdrop-blur-xl border border-stone-200/90 dark:border-stone-800/90 rounded-t-[28px] shadow-2xl overflow-hidden transition-all duration-300 flex flex-col w-full ${
+        isExpanded ? 'max-h-[85vh]' : 'max-h-[50vh] sm:max-h-[54vh]'
       }`}
     >
       {/* Mobile Drag Handle Bar */}
@@ -164,40 +166,41 @@ export const PlaceDetailCard: React.FC<PlaceDetailCardProps> = ({
 
       {/* Header Bar */}
       <div className="flex items-center justify-between px-4 pb-2.5 pt-0 border-b border-stone-100 dark:border-stone-800 flex-shrink-0">
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-1.5 min-w-0">
           <span
-            className="text-[11px] font-bold px-3 py-1 rounded-full uppercase tracking-wider text-white"
+            className="text-[11px] font-bold px-2.5 py-0.5 rounded-full uppercase tracking-wider text-white flex-shrink-0"
             style={{ backgroundColor: activePalette.primary || '#FF2D55' }}
           >
             {t.categories[place.category] || place.category}
           </span>
           {place.isFirstVisit && (
-            <span className="text-[10px] font-bold bg-pink-50 dark:bg-pink-950/60 text-pink-600 dark:text-pink-400 px-2.5 py-0.5 rounded-full">
+            <span className="text-[10px] font-bold bg-pink-50 dark:bg-pink-950/60 text-pink-600 dark:text-pink-400 px-2 py-0.5 rounded-full flex-shrink-0">
               {t.timeline.firstVisitBadge || (settings.language === 'ko' ? '처음' : '初めて')}
             </span>
           )}
-
           {typeof currentIndex === 'number' && typeof totalPlaces === 'number' && (
-            <span className="text-[10px] font-mono text-stone-400 dark:text-stone-500">
-              {currentIndex + 1} / {totalPlaces}
+            <span className="text-[10px] font-mono text-stone-400 dark:text-stone-500 flex-shrink-0">
+              {currentIndex + 1}/{totalPlaces}
             </span>
           )}
         </div>
 
-        <div className="flex items-center gap-1.5">
+        <div className="flex items-center gap-1 flex-shrink-0">
           {/* Previous / Next Place navigation buttons */}
           {onPrevPlace && onNextPlace && (
-            <div className="flex items-center gap-0.5 bg-stone-100 dark:bg-stone-800/80 rounded-full p-0.5 mr-1">
+            <div className="flex items-center gap-0.5 bg-stone-100 dark:bg-stone-800/80 rounded-full p-0.5 mr-0.5">
               <button
+                type="button"
                 onClick={onPrevPlace}
-                className="w-6 h-6 rounded-full flex items-center justify-center text-stone-600 dark:text-stone-300 hover:bg-white dark:hover:bg-stone-700 transition"
+                className="w-6 h-6 rounded-full flex items-center justify-center text-stone-600 dark:text-stone-300 hover:bg-white dark:hover:bg-stone-700 transition active:scale-95"
                 title={settings.language === 'ko' ? '이전 장소' : '前の場所'}
               >
                 <ChevronLeft className="w-3.5 h-3.5" />
               </button>
               <button
+                type="button"
                 onClick={onNextPlace}
-                className="w-6 h-6 rounded-full flex items-center justify-center text-stone-600 dark:text-stone-300 hover:bg-white dark:hover:bg-stone-700 transition"
+                className="w-6 h-6 rounded-full flex items-center justify-center text-stone-600 dark:text-stone-300 hover:bg-white dark:hover:bg-stone-700 transition active:scale-95"
                 title={settings.language === 'ko' ? '다음 장소' : '次の場所'}
               >
                 <ChevronRight className="w-3.5 h-3.5" />
@@ -208,36 +211,14 @@ export const PlaceDetailCard: React.FC<PlaceDetailCardProps> = ({
           {/* Center on map button */}
           {onCenterMap && (
             <button
+              type="button"
               onClick={onCenterMap}
-              className="w-7 h-7 rounded-full flex items-center justify-center text-stone-500 hover:text-pink-600 dark:hover:text-pink-400 bg-stone-100 dark:bg-stone-800 transition"
+              className="w-7 h-7 rounded-full flex items-center justify-center text-stone-500 hover:text-pink-600 dark:hover:text-pink-400 bg-stone-100 dark:bg-stone-800 transition active:scale-95"
               title={settings.language === 'ko' ? '지도 중앙에 표시' : '地図で確認'}
             >
               <Crosshair className="w-3.5 h-3.5" />
             </button>
           )}
-
-          {/* Likes counter */}
-          <button
-            onClick={handleIncrementLikes}
-            className="flex items-center gap-1 text-xs font-bold text-rose-500 hover:scale-105 transition active:scale-95 px-2 py-1 rounded-full bg-rose-50 dark:bg-rose-950/40"
-          >
-            <Heart className="w-3.5 h-3.5 fill-rose-500" />
-            <span>{place.likesCount || 0}</span>
-          </button>
-
-          {/* Favorite star */}
-          <button
-            id="btn-place-favorite"
-            onClick={handleToggleFavorite}
-            className={`w-7 h-7 rounded-full flex items-center justify-center transition ${
-              place.isFavorite
-                ? 'text-amber-500 bg-amber-50 dark:bg-amber-950/50'
-                : 'text-stone-400 hover:text-stone-600 dark:hover:text-stone-300'
-            }`}
-            title={t.placeDetail.favorite}
-          >
-            <Star className={`w-3.5 h-3.5 ${place.isFavorite ? 'fill-current' : ''}`} />
-          </button>
 
           {/* Expand/Collapse Mode Toggle */}
           <button
@@ -251,9 +232,11 @@ export const PlaceDetailCard: React.FC<PlaceDetailCardProps> = ({
 
           {/* Close button */}
           <button
+            type="button"
             id="btn-place-close"
             onClick={onClose}
-            className="w-7 h-7 rounded-full flex items-center justify-center text-stone-400 hover:text-stone-700 dark:hover:text-stone-200 hover:bg-stone-100 dark:hover:bg-stone-800 transition"
+            className="w-7 h-7 rounded-full flex items-center justify-center text-stone-400 hover:text-stone-700 dark:hover:text-stone-200 hover:bg-stone-100 dark:hover:bg-stone-800 transition active:scale-95"
+            title={settings.language === 'ko' ? '닫기' : 'Close'}
           >
             <X className="w-4 h-4" />
           </button>
@@ -261,23 +244,52 @@ export const PlaceDetailCard: React.FC<PlaceDetailCardProps> = ({
       </div>
 
       {/* Content scroll area */}
-      <div className="p-4 overflow-y-auto space-y-4 flex-1">
-        {/* Title and times */}
+      <div className="p-4 overflow-y-auto space-y-3.5 flex-1">
+        {/* Title and Quick Reaction (Likes & Favorite) */}
         <div>
-          <div className="flex items-center justify-between">
-            <h3 className="text-lg font-black text-stone-900 dark:text-white leading-tight">
-              {displayName}
-            </h3>
-            {place.rating && (
-              <div className="flex items-center gap-1 text-xs font-bold text-amber-500 bg-amber-50 dark:bg-amber-950/40 px-2 py-0.5 rounded-full">
-                <Star className="w-3 h-3 fill-current" />
-                <span>{place.rating.toFixed(1)}</span>
-              </div>
-            )}
+          <div className="flex items-start justify-between gap-2">
+            <div>
+              <h3 className="text-base sm:text-lg font-black text-stone-900 dark:text-white leading-snug">
+                {displayName}
+              </h3>
+              {place.rating && (
+                <div className="mt-1 inline-flex items-center gap-1 text-xs font-bold text-amber-500 bg-amber-50 dark:bg-amber-950/40 px-2 py-0.5 rounded-full">
+                  <Star className="w-3 h-3 fill-current" />
+                  <span>{place.rating.toFixed(1)}</span>
+                </div>
+              )}
+            </div>
+
+            {/* Reactions: Likes & Favorite Star */}
+            <div className="flex items-center gap-1.5 flex-shrink-0">
+              <button
+                type="button"
+                onClick={handleIncrementLikes}
+                className="flex items-center gap-1 text-xs font-bold text-rose-500 hover:scale-105 transition active:scale-95 px-2.5 py-1 rounded-full bg-rose-50 dark:bg-rose-950/40"
+                title={settings.language === 'ko' ? '좋아요' : 'Like'}
+              >
+                <Heart className="w-3.5 h-3.5 fill-rose-500" />
+                <span>{place.likesCount || 0}</span>
+              </button>
+
+              <button
+                type="button"
+                id="btn-place-favorite"
+                onClick={handleToggleFavorite}
+                className={`w-7 h-7 rounded-full flex items-center justify-center transition active:scale-95 ${
+                  place.isFavorite
+                    ? 'text-amber-500 bg-amber-50 dark:bg-amber-950/50'
+                    : 'text-stone-400 hover:text-stone-600 dark:hover:text-stone-300 bg-stone-100 dark:bg-stone-800'
+                }`}
+                title={t.placeDetail.favorite}
+              >
+                <Star className={`w-3.5 h-3.5 ${place.isFavorite ? 'fill-current' : ''}`} />
+              </button>
+            </div>
           </div>
 
           {displayQuote && (
-            <div className="mt-1.5 inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-stone-100 dark:bg-stone-800 text-xs font-semibold text-stone-700 dark:text-stone-200">
+            <div className="mt-2 inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-stone-100 dark:bg-stone-800 text-xs font-semibold text-stone-700 dark:text-stone-200">
               <MessageSquareQuote className="w-3.5 h-3.5 text-stone-400" />
               <span>{displayQuote}</span>
             </div>
@@ -337,7 +349,7 @@ export const PlaceDetailCard: React.FC<PlaceDetailCardProps> = ({
           <div className="flex items-center justify-between mb-2">
             <span className="text-xs font-bold text-stone-700 dark:text-stone-300 flex items-center gap-1">
               <Camera className="w-3.5 h-3.5" />
-              {t.placeDetail.photos} ({place.photos.length})
+              {t.placeDetail.photos} ({safePhotos.length})
             </span>
             <button
               onClick={() => setShowAddPhotoInput(!showAddPhotoInput)}
@@ -366,10 +378,10 @@ export const PlaceDetailCard: React.FC<PlaceDetailCardProps> = ({
             </form>
           )}
 
-          {place.photos.length > 0 ? (
+          {safePhotos.length > 0 ? (
             <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
-              {place.photos.map((photo) => {
-                const isCover = photo.url === (place.coverPhotoUrl || place.photos[0]?.url);
+              {safePhotos.map((photo) => {
+                const isCover = photo.url === (place.coverPhotoUrl || safePhotos[0]?.url);
                 return (
                   <div
                     key={photo.id}

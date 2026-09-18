@@ -55,7 +55,7 @@ export const DataView: React.FC<DataViewProps> = ({
     dayKeys.reduce((acc, d) => acc + (days[d].totalDistanceKm || 0), 0).toFixed(1)
   );
   const totalPhotosCount = dayKeys.reduce(
-    (acc, d) => acc + days[d].places.reduce((pAcc, p) => pAcc + p.photos.length, 0),
+    (acc, d) => acc + (days[d]?.places || []).reduce((pAcc, p) => pAcc + (p.photos?.length || 0), 0),
     0
   );
 

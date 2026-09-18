@@ -8,9 +8,8 @@ import {
   Cloud,
   RotateCcw,
   Sparkles,
-  Smartphone,
   Check,
-  Maximize2,
+  Box,
 } from 'lucide-react';
 import { AppSettings, Language, ColorTheme, PrivacyPrecision } from '../types';
 import { translations } from '../i18n/translations';
@@ -101,43 +100,7 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
         </div>
       </div>
 
-      {/* 2. Presentation Frame Mode */}
-      <div className="bg-white dark:bg-stone-900 rounded-3xl p-5 border border-stone-200/80 dark:border-stone-800/80 shadow-xs space-y-3">
-        <div className="flex items-center gap-2">
-          <Smartphone className="w-4 h-4 text-purple-600 dark:text-purple-400" />
-          <h3 className="text-xs font-bold uppercase tracking-wider text-stone-700 dark:text-stone-300">
-            {t.settings.deviceFrame || 'フレーム表示モード'}
-          </h3>
-        </div>
-
-        <div className="grid grid-cols-2 gap-2">
-          <button
-            onClick={() => onUpdateSettings({ frameMode: 'device' })}
-            className={`flex items-center justify-between p-3.5 rounded-2xl border text-xs font-bold transition active:scale-95 ${
-              settings.frameMode === 'device'
-                ? 'bg-purple-50 dark:bg-purple-950/50 border-purple-500 text-purple-700 dark:text-purple-300'
-                : 'bg-stone-50 dark:bg-stone-800/50 border-stone-200/80 dark:border-stone-700/80 text-stone-700 dark:text-stone-300'
-            }`}
-          >
-            <span>{t.settings.frameDevice || '📱 iPhone 16 Pro モックアップ'}</span>
-            {settings.frameMode === 'device' && <Check className="w-4 h-4" />}
-          </button>
-
-          <button
-            onClick={() => onUpdateSettings({ frameMode: 'fullscreen' })}
-            className={`flex items-center justify-between p-3.5 rounded-2xl border text-xs font-bold transition active:scale-95 ${
-              settings.frameMode === 'fullscreen'
-                ? 'bg-purple-50 dark:bg-purple-950/50 border-purple-500 text-purple-700 dark:text-purple-300'
-                : 'bg-stone-50 dark:bg-stone-800/50 border-stone-200/80 dark:border-stone-700/80 text-stone-700 dark:text-stone-300'
-            }`}
-          >
-            <span>{t.settings.frameFull || '🖥️ フルスクリーン表示'}</span>
-            {settings.frameMode === 'fullscreen' && <Check className="w-4 h-4" />}
-          </button>
-        </div>
-      </div>
-
-      {/* 3. Appearance & Theme */}
+      {/* 2. Appearance & Theme */}
       <div className="bg-white dark:bg-stone-900 rounded-3xl p-5 border border-stone-200/80 dark:border-stone-800/80 shadow-xs space-y-3">
         <div className="flex items-center gap-2">
           <Sun className="w-4 h-4 text-amber-500" />
@@ -214,7 +177,40 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
         </div>
       </div>
 
-      {/* 5. Privacy & GPS Precision */}
+      {/* 5. 3D Building View */}
+      <div className="bg-white dark:bg-stone-900 rounded-3xl p-5 border border-stone-200/80 dark:border-stone-800/80 shadow-xs space-y-3">
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-2">
+            <Box className="w-4 h-4 text-pink-600 dark:text-pink-400" />
+            <h3 className="text-xs font-bold uppercase tracking-wider text-stone-700 dark:text-stone-300">
+              {settings.language === 'ko' ? '3D 건물 뷰 (3D Buildings)' : settings.language === 'ja' ? '3D建物ビュー' : '3D Building View'}
+            </h3>
+          </div>
+          <button
+            id="toggle-settings-3d-buildings"
+            type="button"
+            onClick={() => onUpdateSettings({ threeDBuildingView: !settings.threeDBuildingView })}
+            className={`relative inline-flex h-6 w-11 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none ${
+              settings.threeDBuildingView ? 'bg-pink-600' : 'bg-stone-200 dark:bg-stone-700'
+            }`}
+          >
+            <span
+              className={`pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow-md ring-0 transition duration-200 ease-in-out ${
+                settings.threeDBuildingView ? 'translate-x-5' : 'translate-x-0'
+              }`}
+            />
+          </button>
+        </div>
+        <p className="text-xs text-stone-500 dark:text-stone-400 leading-relaxed">
+          {settings.language === 'ko'
+            ? '지도에서 방문 스팟 및 도심 건물을 3차원 입체로 렌더링하고 건물의 층수와 높이, 옥상 구조를 감상합니다.'
+            : settings.language === 'ja'
+            ? '地図上で訪問スポットや街の建物を3D立体表示し、高さやフロア数を確認できます。'
+            : 'Render 3D building extrusions on the map with architectural heights, roof types, and urban blocks.'}
+        </p>
+      </div>
+
+      {/* 6. Privacy & GPS Precision */}
       <div className="bg-white dark:bg-stone-900 rounded-3xl p-5 border border-stone-200/80 dark:border-stone-800/80 shadow-xs space-y-3">
         <div className="flex items-center gap-2">
           <Shield className="w-4 h-4 text-cyan-600 dark:text-cyan-400" />
