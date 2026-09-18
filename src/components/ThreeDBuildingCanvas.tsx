@@ -310,64 +310,84 @@ export const ThreeDBuildingCanvas: React.FC<ThreeDBuildingCanvasProps> = ({
     };
   }, [map, drawBuildings]);
 
-  // Handle pointer interaction (hover and click on 3D buildings)
-  const handleMouseMove = (e: React.MouseEvent<HTMLDivElement>) => {
-    if (!is3DMode) {
-      if (hoveredInfo) setHoveredInfo(null);
+  // Handle pointer interaction (hover and click on 3D buildings via Leaflet events to ensure zero map-drag interference)
+  useEffect(() => {
+    if (!map || !is3DMode) {
+      setHoveredInfo(null);
       return;
     }
 
-    const rect = e.currentTarget.getBoundingClientRect();
-    const mouseX = e.clientX - rect.left;
-    const mouseY = e.clientY - rect.top;
+    const handleMapMouseMove = (e: L.LeafletMouseEvent) => {
+      const { x, y } = e.containerPoint;
+      const roofs = roofPolygonsRef.current;
+      let found: HoveredBuildingInfo | null = null;
 
-    let found: HoveredBuildingInfo | null = null;
-    // Iterate roofs in reverse order (top-most first)
-    const roofs = roofPolygonsRef.current;
-    for (let i = roofs.length - 1; i >= 0; i--) {
-      const { building, roofPoints } = roofs[i];
-      if (pointInPolygon(mouseX, mouseY, roofPoints)) {
-        found = {
-          building,
-          screenX: mouseX,
-          screenY: mouseY,
-        };
-        break;
+      // Iterate roofs in reverse order (top-most first)
+      for (let i = roofs.length - 1; i >= 0; i--) {
+        const { building, roofPoints } = roofs[i];
+        if (pointInPolygon(x, y, roofPoints)) {
+          found = {
+            building,
+            screenX: x,
+            screenY: y,
+          };
+          break;
+        }
       }
-    }
 
-    setHoveredInfo(found);
-  };
+      setHoveredInfo(found);
+      const container = map.getContainer();
+      if (container) {
+        container.style.cursor = found ? 'pointer' : '';
+      }
+    };
 
-  const handleClick = () => {
-    if (hoveredInfo?.building.spotId && onSelectPlace) {
-      onSelectPlace(hoveredInfo.building.spotId);
-    }
-  };
+    const handleMapClick = (e: L.LeafletMouseEvent) => {
+      const { x, y } = e.containerPoint;
+      const roofs = roofPolygonsRef.current;
+      for (let i = roofs.length - 1; i >= 0; i--) {
+        const { building, roofPoints } = roofs[i];
+        if (pointInPolygon(x, y, roofPoints)) {
+          if (building.spotId && onSelectPlace) {
+            onSelectPlace(building.spotId);
+          }
+          break;
+        }
+      }
+    };
+
+    map.on('mousemove', handleMapMouseMove);
+    map.on('click', handleMapClick);
+
+    return () => {
+      map.off('mousemove', handleMapMouseMove);
+      map.off('click', handleMapClick);
+      const container = map.getContainer();
+      if (container) {
+        container.style.cursor = '';
+      }
+    };
+  }, [map, is3DMode, onSelectPlace]);
 
   if (!is3DMode) return null;
 
   return (
     <div
       ref={containerRef}
-      onMouseMove={handleMouseMove}
-      onMouseLeave={() => setHoveredInfo(null)}
-      onClick={handleClick}
-      className="absolute inset-0 pointer-events-auto z-[350]"
-      style={{ cursor: hoveredInfo ? 'pointer' : 'default' }}
+      className="absolute inset-0 pointer-events-none z-[350]"
     >
       <canvas ref={canvasRef} className="w-full h-full block pointer-events-none" />
 
       {/* Floating 3D Building Tooltip on Hover */}
       {hoveredInfo && (
         <div
-          className="absolute z-50 pointer-events-none bg-stone-900/90 dark:bg-stone-950/90 text-white backdrop-blur-md px-3 py-2 rounded-xl shadow-xl border border-stone-700/80 text-xs flex flex-col gap-0.5 animate-in fade-in zoom-in-95 duration-150"
+          className="absolute z-50 pointer-events-none bg-stone-900/95 dark:bg-stone-950/95 text-white backdrop-blur-md px-3 py-2 rounded-xl shadow-xl border border-stone-700/80 text-xs flex flex-col gap-0.5 animate-in fade-in zoom-in-95 duration-100"
           style={{
-            left: Math.min(window.innerWidth - 180, Math.max(10, hoveredInfo.screenX - 70)),
-            top: Math.max(10, hoveredInfo.screenY - 65),
+            left: Math.min(window.innerWidth - 190, Math.max(12, hoveredInfo.screenX - 70)),
+            top: Math.max(12, hoveredInfo.screenY - 68),
           }}
         >
-          <div className="font-bold flex items-center gap-1.5 truncate max-w-[200px]">
+          <div className="font-bold flex items-center gap-1.5 truncate max-w-[210px]">
             {hoveredInfo.building.isSpot && (
               <span className="w-2 h-2 rounded-full bg-pink-500 animate-pulse flex-shrink-0" />
             )}

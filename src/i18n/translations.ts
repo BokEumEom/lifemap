@@ -70,10 +70,12 @@ export const translations = {
       centerRoute: 'ルート全体を表示',
       currentLocation: '現在地',
       styleSelect: '地図スタイル',
+      styleOsm: 'OpenStreetMap (標準)',
+      styleOsmHot: 'OpenStreetMap (HOT人道支援)',
+      styleDark: 'ダークモード (OSM)',
+      styleSatellite: '衛星写真 (ArcGIS)',
       stylePositron: 'ミニマルライト',
-      styleDark: 'ダークモード',
       styleVoyager: 'ボイジャー',
-      styleSatellite: '衛星写真',
       perspectiveToggle: '3D建築表示',
       addPlaceAtCenter: 'この位置に場所を追加',
       noPlacesOnMap: 'この日の移動記録はありません。',
@@ -260,10 +262,12 @@ export const translations = {
       centerRoute: '경로 맞추기',
       currentLocation: '현재 위치',
       styleSelect: '지도 스타일',
+      styleOsm: 'OpenStreetMap (표준)',
+      styleOsmHot: 'OpenStreetMap (컬러/HOT)',
+      styleDark: 'OpenStreetMap (다크)',
+      styleSatellite: '위성 지도 (ArcGIS)',
       stylePositron: '미니멀 라이트',
-      styleDark: '다크 매터',
       styleVoyager: '컬러 맵',
-      styleSatellite: '위성 지도',
       perspectiveToggle: '3D 건물 뷰',
       addPlaceAtCenter: '이 위치에 장소 추가',
       noPlacesOnMap: '선택한 날짜에 기록된 경로가 없습니다.',
@@ -450,10 +454,12 @@ export const translations = {
       centerRoute: 'Fit to Route',
       currentLocation: 'My Location',
       styleSelect: 'Map Style',
+      styleOsm: 'OpenStreetMap (Standard)',
+      styleOsmHot: 'OpenStreetMap (HOT Color)',
+      styleDark: 'OpenStreetMap (Dark)',
+      styleSatellite: 'Satellite (ArcGIS)',
       stylePositron: 'Minimal Light',
-      styleDark: 'Dark Matter',
       styleVoyager: 'Voyager Color',
-      styleSatellite: 'Satellite Imagery',
       perspectiveToggle: '3D Building View',
       addPlaceAtCenter: 'Add Place Here',
       noPlacesOnMap: 'No route recorded for this date.',
@@ -573,7 +579,7 @@ export const translations = {
   }
 };
 
-export function formatDayTitle(dateString: string, lang: Language): string {
+export function formatDayTitle(dateString: string, lang: Language, compact: boolean = false): string {
   try {
     const [year, month, day] = dateString.split('-').map(Number);
     const dateObj = new Date(year, month - 1, day);
@@ -581,17 +587,17 @@ export function formatDayTitle(dateString: string, lang: Language): string {
     if (lang === 'ja') {
       const daysJa = ['日', '月', '火', '水', '木', '金', '土'];
       const dayOfWeek = daysJa[dateObj.getDay()];
-      return `${year} ${month}月${day}日(${dayOfWeek})`;
+      return compact ? `${month}月${day}日(${dayOfWeek})` : `${year} ${month}月${day}日(${dayOfWeek})`;
     } else if (lang === 'ko') {
       const daysKo = ['일', '월', '화', '수', '목', '금', '토'];
       const dayOfWeek = daysKo[dateObj.getDay()];
-      return `${year}년 ${month}월 ${day}일 (${dayOfWeek})`;
+      return compact ? `${month}월 ${day}일 (${dayOfWeek})` : `${year}년 ${month}월 ${day}일 (${dayOfWeek})`;
     } else {
       const daysEn = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
       const monthsEn = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
       const dayOfWeek = daysEn[dateObj.getDay()];
       const monthStr = monthsEn[month - 1];
-      return `${dayOfWeek}, ${monthStr} ${day}, ${year}`;
+      return compact ? `${monthStr} ${day} (${dayOfWeek})` : `${dayOfWeek}, ${monthStr} ${day}, ${year}`;
     }
   } catch {
     return dateString;

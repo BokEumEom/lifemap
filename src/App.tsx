@@ -54,7 +54,7 @@ export default function App() {
           language: parsed.language || 'ko',
           theme: parsed.theme || 'light',
           colorTheme: parsed.colorTheme || 'magenta',
-          mapStyle: parsed.mapStyle || 'positron',
+          mapStyle: parsed.mapStyle && parsed.mapStyle !== 'positron' ? parsed.mapStyle : 'osm',
           privacyPrecision: parsed.privacyPrecision || 'exact',
           syncOption: parsed.syncOption || 'local',
           autoTrackLocation: Boolean(parsed.autoTrackLocation),
@@ -68,7 +68,7 @@ export default function App() {
       language: 'ko', // Default to Korean
       theme: 'light',
       colorTheme: 'magenta',
-      mapStyle: 'positron',
+      mapStyle: 'osm',
       privacyPrecision: 'exact',
       syncOption: 'local',
       autoTrackLocation: false,

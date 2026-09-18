@@ -10,8 +10,9 @@ import {
   Sparkles,
   Check,
   Box,
+  Layers,
 } from 'lucide-react';
-import { AppSettings, Language, ColorTheme, PrivacyPrecision } from '../types';
+import { AppSettings, Language, ColorTheme, PrivacyPrecision, MapStyle } from '../types';
 import { translations } from '../i18n/translations';
 import { PALETTES } from '../utils/geoUtils';
 
@@ -171,6 +172,67 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
                   style={{ backgroundColor: ct.primary }}
                 />
                 <span className="truncate">{ct.label}</span>
+              </button>
+            );
+          })}
+        </div>
+      </div>
+
+      {/* 4.5 Map Tile & Style */}
+      <div className="bg-white dark:bg-stone-900 rounded-3xl p-5 border border-stone-200/80 dark:border-stone-800/80 shadow-xs space-y-3">
+        <div className="flex items-center gap-2">
+          <Layers className="w-4 h-4 text-emerald-600 dark:text-emerald-400" />
+          <h3 className="text-xs font-bold uppercase tracking-wider text-stone-700 dark:text-stone-300">
+            {t.map.styleSelect}
+          </h3>
+        </div>
+        <p className="text-xs text-stone-500 dark:text-stone-400 leading-relaxed">
+          {settings.language === 'ko'
+            ? '기본 지도로 OpenStreetMap 표준 타일을 사용하여 상세한 골목길과 지명을 제공합니다.'
+            : settings.language === 'ja'
+            ? 'OpenStreetMap標準タイルを使用し、路地や地名を詳細に表示します。'
+            : 'Powered by OpenStreetMap standard tiles with crisp street names and paths.'}
+        </p>
+
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+          {[
+            {
+              id: 'osm',
+              label: t.map.styleOsm || 'OpenStreetMap (표준)',
+              desc: settings.language === 'ko' ? '글로벌 표준 OSM 타일 (권장)' : 'Global Standard OSM',
+            },
+            {
+              id: 'osm_hot',
+              label: t.map.styleOsmHot || 'OpenStreetMap (컬러/HOT)',
+              desc: settings.language === 'ko' ? '인도주의 OSM 컬러풀 지도' : 'Humanitarian OSM',
+            },
+            {
+              id: 'dark',
+              label: t.map.styleDark,
+              desc: settings.language === 'ko' ? '야간 다크 테마 지도' : 'Night Mode',
+            },
+            {
+              id: 'satellite',
+              label: t.map.styleSatellite,
+              desc: settings.language === 'ko' ? '항공 실사 위성 사진' : 'Satellite Imagery',
+            },
+          ].map((styleItem) => {
+            const isSelected = settings.mapStyle === styleItem.id;
+            return (
+              <button
+                key={styleItem.id}
+                onClick={() => onUpdateSettings({ mapStyle: styleItem.id as MapStyle })}
+                className={`text-left p-3 rounded-2xl border transition active:scale-[0.99] flex items-center justify-between ${
+                  isSelected
+                    ? 'bg-emerald-50 dark:bg-emerald-950/40 border-emerald-500 text-emerald-900 dark:text-emerald-200 shadow-xs'
+                    : 'bg-stone-50 dark:bg-stone-800/50 border-stone-200/80 dark:border-stone-700/80 text-stone-700 dark:text-stone-300 hover:bg-stone-100'
+                }`}
+              >
+                <div>
+                  <div className="text-xs font-bold">{styleItem.label}</div>
+                  <div className="text-[10px] text-stone-500 dark:text-stone-400 mt-0.5">{styleItem.desc}</div>
+                </div>
+                {isSelected && <Check className="w-4 h-4 text-emerald-600 dark:text-emerald-400 flex-shrink-0" />}
               </button>
             );
           })}

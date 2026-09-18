@@ -79,6 +79,7 @@ export const MapView: React.FC<MapViewProps> = ({
   const [sheetSnap, setSheetSnap] = useState<BottomSheetSnap>('peek');
   const [is3DMode, setIs3DMode] = useState<boolean>(settings.threeDBuildingView ?? false);
   const [showStyleMenu, setShowStyleMenu] = useState<boolean>(false);
+  const [modeToast, setModeToast] = useState<string | null>(null);
   const [clickedCoords, setClickedCoords] = useState<{ lat: number; lng: number } | null>(null);
   const [userGpsLocation, setUserGpsLocation] = useState<{ lat: number; lng: number } | null>(null);
   const [isLocating, setIsLocating] = useState<boolean>(false);
@@ -174,23 +175,42 @@ export const MapView: React.FC<MapViewProps> = ({
     }
 
     const isDark = settings.theme === 'dark';
-    let tileUrl = 'https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png';
-    let subdomains = ['a', 'b', 'c', 'd'];
-    let maxZoom = 20;
+    let tileUrl = 'https://tile.openstreetmap.org/{z}/{x}/{y}.png';
+    let subdomains: string[] = ['a', 'b', 'c'];
+    let maxZoom = 19;
+    let attribution = '&copy; <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener noreferrer">OpenStreetMap</a> contributors';
 
-    if (settings.mapStyle === 'dark' || (settings.mapStyle === 'positron' && isDark)) {
+    if (settings.mapStyle === 'osm_hot') {
+      tileUrl = 'https://{s}.tile.openstreetmap.fr/hot/{z}/{x}/{y}.png';
+      subdomains = ['a', 'b'];
+      maxZoom = 19;
+      attribution = '&copy; <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener noreferrer">OpenStreetMap</a> contributors, Tiles by <a href="https://www.hotosm.org/" target="_blank">HOT</a>';
+    } else if (settings.mapStyle === 'dark' || (settings.mapStyle === 'osm' && isDark)) {
       tileUrl = 'https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png';
-    } else if (settings.mapStyle === 'voyager') {
-      tileUrl = 'https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png';
+      subdomains = ['a', 'b', 'c', 'd'];
+      maxZoom = 20;
+      attribution = '&copy; <a href="https://www.openstreetmap.org/copyright" target="_blank">OpenStreetMap</a> contributors, &copy; CARTO';
     } else if (settings.mapStyle === 'satellite') {
       tileUrl = 'https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}';
       subdomains = [];
       maxZoom = 19;
+      attribution = 'Tiles &copy; Esri &mdash; OpenStreetMap & World Imagery';
+    } else if (settings.mapStyle === 'voyager') {
+      tileUrl = 'https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png';
+      subdomains = ['a', 'b', 'c', 'd'];
+      maxZoom = 20;
+      attribution = '&copy; <a href="https://www.openstreetmap.org/copyright" target="_blank">OpenStreetMap</a> contributors, &copy; CARTO';
+    } else if (settings.mapStyle === 'positron') {
+      tileUrl = 'https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png';
+      subdomains = ['a', 'b', 'c', 'd'];
+      maxZoom = 20;
+      attribution = '&copy; <a href="https://www.openstreetmap.org/copyright" target="_blank">OpenStreetMap</a> contributors, &copy; CARTO';
     }
 
     const layer = L.tileLayer(tileUrl, {
       maxZoom,
       subdomains: subdomains.length > 0 ? subdomains : ['a'],
+      attribution,
       keepBuffer: 4,
     });
 
@@ -436,7 +456,23 @@ export const MapView: React.FC<MapViewProps> = ({
     setIs3DMode(next);
     onUpdateSettings({ threeDBuildingView: next });
 
+    const toastText = next
+      ? (settings.language === 'ko' ? '3D 입체 건물 뷰 활성화 (스팟 & 옥상 렌더링)' : '3D Building Extrusion View Enabled')
+      : (settings.language === 'ko' ? '2D 평면 지도 뷰' : '2D Map View');
+    setModeToast(toastText);
+    setTimeout(() => {
+      setModeToast((prev) => (prev === toastText ? null : prev));
+    }, 2400);
+
     if (map) {
+      if (next && map.getZoom() < 15) {
+        const targetPlace = dayLog?.places?.[0];
+        if (targetPlace) {
+          map.flyTo([targetPlace.lat, targetPlace.lng], 16.5, { duration: 0.8 });
+        } else {
+          map.setZoom(16);
+        }
+      }
       setTimeout(() => {
         map.invalidateSize();
       }, 150);
@@ -563,6 +599,29 @@ export const MapView: React.FC<MapViewProps> = ({
           onSelectPlace={(id) => onSelectPlace(id)}
           language={settings.language}
         />
+
+        {/* OpenStreetMap Attribution Badge */}
+        <div className="absolute bottom-20 sm:bottom-24 left-3 z-20 pointer-events-auto flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-white/90 dark:bg-stone-900/90 backdrop-blur-md border border-stone-200/80 dark:border-stone-800/80 text-[10px] text-stone-600 dark:text-stone-300 shadow-xs">
+          <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse flex-shrink-0" />
+          <span className="font-bold">OpenStreetMap</span>
+          <span className="text-stone-400">©</span>
+          <a
+            href="https://www.openstreetmap.org/copyright"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="text-stone-500 dark:text-stone-400 hover:text-pink-600 dark:hover:text-pink-400 underline transition"
+          >
+            {settings.language === 'ko' ? '기여자' : settings.language === 'ja' ? '貢献者' : 'Contributors'}
+          </a>
+        </div>
+
+        {/* Mode Toast Feedback */}
+        {modeToast && (
+          <div className="absolute top-16 left-1/2 -translate-x-1/2 z-40 bg-stone-900/95 dark:bg-stone-950/95 text-white backdrop-blur-md px-3.5 py-2 rounded-2xl shadow-xl border border-stone-700/80 text-xs font-semibold flex items-center gap-2 animate-in fade-in slide-in-from-top-2 duration-150">
+            <span className="w-2 h-2 rounded-full bg-pink-500 animate-ping flex-shrink-0" />
+            <span>{modeToast}</span>
+          </div>
+        )}
       </div>
 
       {/* Floating Map Controls on Right (Apple Maps Style) */}
@@ -603,12 +662,13 @@ export const MapView: React.FC<MapViewProps> = ({
           </button>
 
           {showStyleMenu && (
-            <div className="absolute right-0 top-11 bg-white dark:bg-stone-900 rounded-2xl shadow-xl border border-stone-200 dark:border-stone-800 p-2 z-50 w-40 space-y-1 animate-in fade-in zoom-in-95">
+            <div className="absolute right-0 top-11 bg-white dark:bg-stone-900 rounded-2xl shadow-xl border border-stone-200 dark:border-stone-800 p-2 z-50 w-44 space-y-1 animate-in fade-in zoom-in-95">
               {[
-                { id: 'positron', label: t.map.stylePositron },
+                { id: 'osm', label: t.map.styleOsm || 'OpenStreetMap (표준)' },
+                { id: 'osm_hot', label: t.map.styleOsmHot || 'OpenStreetMap (컬러/HOT)' },
                 { id: 'dark', label: t.map.styleDark },
-                { id: 'voyager', label: t.map.styleVoyager },
                 { id: 'satellite', label: t.map.styleSatellite },
+                { id: 'voyager', label: t.map.styleVoyager },
               ].map((style) => (
                 <button
                   key={style.id}

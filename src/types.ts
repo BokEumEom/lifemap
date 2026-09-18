@@ -108,7 +108,7 @@ export interface DayLog {
 
 export type ColorTheme = 'emerald' | 'indigo' | 'tangerine' | 'cyan' | 'rose' | 'magenta';
 
-export type MapStyle = 'positron' | 'dark' | 'voyager' | 'satellite';
+export type MapStyle = 'osm' | 'osm_hot' | 'dark' | 'satellite' | 'positron' | 'voyager';
 
 export type PrivacyPrecision = 'exact' | 'approximate';
 
