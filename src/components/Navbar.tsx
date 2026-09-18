@@ -175,7 +175,7 @@ export const Navbar: React.FC<NavbarProps> = ({
                       )}
                       {d === '2026-09-17' && (
                         <span className="text-[10px] font-bold bg-emerald-100 dark:bg-emerald-900/60 text-emerald-700 dark:text-emerald-300 px-2 py-0.5 rounded-full flex-shrink-0">
-                          {settings.language === 'ko' ? '북촌·삼청 4곳' : settings.language === 'ja' ? '北村 4ヶ所' : 'Bukchon (4)'}
+                          {settings.language === 'ko' ? '종로·북촌 5곳' : settings.language === 'ja' ? '鍾路・北村 5ヶ所' : 'Bukchon (5)'}
                         </span>
                       )}
                       {d === '2026-09-14' && (

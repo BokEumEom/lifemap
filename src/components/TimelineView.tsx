@@ -22,6 +22,7 @@ import {
   getPlaceNoteQuote,
   getDayPrefecture,
   getPhotoCaption,
+  getDayDailyNote,
 } from '../utils/localeUtils';
 
 interface TimelineViewProps {
@@ -45,12 +46,13 @@ export const TimelineView: React.FC<TimelineViewProps> = ({
   onPrevDay,
   onNextDay,
 }) => {
-  const [memoInput, setMemoInput] = useState(dayLog?.dailyNote || '');
+  const currentDailyNote = getDayDailyNote(dayLog, settings.language);
+  const [memoInput, setMemoInput] = useState(currentDailyNote);
   const [activeBottomCard, setActiveBottomCard] = useState<'memory' | 'overview' | 'map'>('memory');
 
   React.useEffect(() => {
-    setMemoInput(dayLog?.dailyNote || '');
-  }, [dayLog?.date, dayLog?.dailyNote]);
+    setMemoInput(getDayDailyNote(dayLog, settings.language));
+  }, [dayLog?.date, dayLog?.dailyNote, dayLog?.dailyNoteKo, dayLog?.dailyNoteJa, settings.language]);
 
   const t = translations[settings.language];
 
@@ -352,51 +354,93 @@ export const TimelineView: React.FC<TimelineViewProps> = ({
                 value={memoInput}
                 onChange={(e) => setMemoInput(e.target.value)}
                 onBlur={() => {
-                  if (memoInput !== (dayLog.dailyNote || '')) {
-                    onUpdateDayLog({
-                      ...dayLog,
-                      dailyNote: memoInput,
-                    });
+                  if (memoInput !== currentDailyNote) {
+                    if (settings.language === 'ko') {
+                      onUpdateDayLog({
+                        ...dayLog,
+                        dailyNoteKo: memoInput,
+                        dailyNote: dayLog.dailyNote || memoInput,
+                      });
+                    } else if (settings.language === 'ja') {
+                      onUpdateDayLog({
+                        ...dayLog,
+                        dailyNoteJa: memoInput,
+                        dailyNote: memoInput,
+                      });
+                    } else {
+                      onUpdateDayLog({
+                        ...dayLog,
+                        dailyNote: memoInput,
+                      });
+                    }
                   }
                 }}
                 onKeyDown={(e) => {
                   if (e.key === 'Enter') {
-                    onUpdateDayLog({
-                      ...dayLog,
-                      dailyNote: memoInput,
-                    });
+                    if (settings.language === 'ko') {
+                      onUpdateDayLog({
+                        ...dayLog,
+                        dailyNoteKo: memoInput,
+                        dailyNote: dayLog.dailyNote || memoInput,
+                      });
+                    } else if (settings.language === 'ja') {
+                      onUpdateDayLog({
+                        ...dayLog,
+                        dailyNoteJa: memoInput,
+                        dailyNote: memoInput,
+                      });
+                    } else {
+                      onUpdateDayLog({
+                        ...dayLog,
+                        dailyNote: memoInput,
+                      });
+                    }
                   }
                 }}
-                placeholder={t.timeline.dailyMemoPlaceholder || (settings.language === 'ko' ? '이 날의 하루 메모 남기기...' : 'この日のメモを書く...')}
+                placeholder={t.timeline.dailyMemoPlaceholder || (settings.language === 'ko' ? '이 날의 하루 메모 남기기...' : settings.language === 'ja' ? 'この日のメモを書く...' : 'Write daily note...')}
                 className="flex-1 text-xs p-3 rounded-2xl bg-stone-50 dark:bg-stone-800/60 border border-stone-200 dark:border-stone-700/60 text-stone-800 dark:text-stone-200 placeholder:text-stone-400 focus:outline-none focus:ring-2 focus:ring-pink-500"
               />
-              {memoInput !== (dayLog.dailyNote || '') && (
+              {memoInput !== currentDailyNote && (
                 <button
                   type="button"
                   onClick={() => {
-                    onUpdateDayLog({
-                      ...dayLog,
-                      dailyNote: memoInput,
-                    });
+                    if (settings.language === 'ko') {
+                      onUpdateDayLog({
+                        ...dayLog,
+                        dailyNoteKo: memoInput,
+                        dailyNote: dayLog.dailyNote || memoInput,
+                      });
+                    } else if (settings.language === 'ja') {
+                      onUpdateDayLog({
+                        ...dayLog,
+                        dailyNoteJa: memoInput,
+                        dailyNote: memoInput,
+                      });
+                    } else {
+                      onUpdateDayLog({
+                        ...dayLog,
+                        dailyNote: memoInput,
+                      });
+                    }
                   }}
                   className="px-3.5 py-2.5 rounded-2xl bg-pink-500 text-white font-bold text-xs hover:bg-pink-600 transition active:scale-95 flex-shrink-0"
                 >
-                  {settings.language === 'ko' ? '저장' : '保存'}
+                  {settings.language === 'ko' ? '저장' : settings.language === 'ja' ? '保存' : 'Save'}
                 </button>
               )}
             </div>
           </div>
 
           {/* Daily Note (User's personal note) Display if saved */}
-          {dayLog.dailyNote && (
+          {currentDailyNote && (
             <div className="bg-stone-50 dark:bg-stone-800/40 rounded-2xl p-3.5 border border-stone-200/60 dark:border-stone-700/60 flex items-start gap-2.5">
               <MessageSquareQuote className="w-4 h-4 text-pink-500 flex-shrink-0 mt-0.5" />
               <div className="flex-1">
                 <p className="text-xs text-stone-800 dark:text-stone-200 leading-relaxed font-medium">
-                  {dayLog.dailyNote}
+                  {currentDailyNote}
                 </p>
                 <span className="text-[10px] text-stone-400 mt-1 block">
-                  {settings.language === 'ko' ? '나의 하루 메모' : 'マイメモ'}
+                  {settings.language === 'ko' ? '나의 하루 메모' : settings.language === 'ja' ? 'マイメモ' : 'My Daily Note'}
                 </span>
               </div>
             </div>
@@ -405,7 +449,7 @@ export const TimelineView: React.FC<TimelineViewProps> = ({
           {/* Summary Chips (Video Matching): 大分県, カフェ 3か所, ステップ 3か所, レストラン 2か所, 3.2 km, 初めて 12か所 */}
           <div className="flex flex-wrap gap-1.5 pt-1">
             <span className="text-[11px] font-semibold px-3 py-1 rounded-full bg-stone-100 dark:bg-stone-800 text-stone-700 dark:text-stone-300">
-              {getDayPrefecture(dayLog.summaryMeta?.prefecture, dayLog.summaryMeta?.prefectureKo, settings.language) || (settings.language === 'ko' ? '오이타현' : '大分県')}
+              {getDayPrefecture(dayLog.summaryMeta?.prefecture, dayLog.summaryMeta?.prefectureKo, settings.language, dayLog.summaryMeta?.prefectureJa) || (settings.language === 'ko' ? '서울특별시 성동구' : settings.language === 'ja' ? 'ソウル特別市 城東区' : 'Seoul')}
             </span>
             <span className="text-[11px] font-semibold px-3 py-1 rounded-full bg-stone-100 dark:bg-stone-800 text-stone-700 dark:text-stone-300">
               {t.categories.cafe || '카페'} {dayLog.summaryMeta?.cafesCount || 3}{settings.language === 'ko' ? '곳' : 'か所'}

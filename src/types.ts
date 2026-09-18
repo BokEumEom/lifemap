@@ -28,6 +28,7 @@ export interface PlaceLog {
   id: string;
   name: string;
   nameKo?: string;
+  nameJa?: string;
   nameEn?: string;
   category: Category;
   lat: number;
@@ -37,6 +38,7 @@ export interface PlaceLog {
   durationMinutes?: number;
   address?: string;
   addressKo?: string;
+  addressJa?: string;
   addressEn?: string;
   weather?: {
     icon: string; // e.g., 'sunny' | 'cloudy' | 'rain'
@@ -49,9 +51,11 @@ export interface PlaceLog {
   coverPhotoUrl?: string;
   note?: string;
   noteKo?: string;
+  noteJa?: string;
   noteEn?: string;
   noteQuote?: string; // e.g. "また来たい"
   noteQuoteKo?: string;
+  noteQuoteJa?: string;
   noteQuoteEn?: string;
   likesCount?: number; // e.g. 83, 87
   rating?: number; // e.g. 3.5, 4.0
@@ -69,6 +73,7 @@ export interface RoutePoint {
 export interface DaySummaryMeta {
   prefecture?: string; // e.g. "大分県"
   prefectureKo?: string; // e.g. "오이타현"
+  prefectureJa?: string;
   prefectureEn?: string;
   cafesCount?: number; // e.g. 3
   stepsCount?: number; // e.g. 3
@@ -82,6 +87,7 @@ export interface DayLog {
   date: string; // "YYYY-MM-DD" e.g. "2026-09-12"
   title?: string;
   titleKo?: string;
+  titleJa?: string;
   titleEn?: string;
   places: PlaceLog[];
   routePoints: RoutePoint[];
@@ -89,17 +95,21 @@ export interface DayLog {
   totalDistanceKm: number;
   dailyNote?: string;
   dailyNoteKo?: string;
+  dailyNoteJa?: string;
   dailyNoteEn?: string;
   summaryMeta?: DaySummaryMeta;
   aiRecap?: {
     recap: string;
     recapKo?: string;
+    recapJa?: string;
     recapEn?: string;
     mood: string;
     moodKo?: string;
+    moodJa?: string;
     moodEn?: string;
     highlight: string;
     highlightKo?: string;
+    highlightJa?: string;
     highlightEn?: string;
     generatedAt?: string;
     isAppleIntelligence?: boolean;

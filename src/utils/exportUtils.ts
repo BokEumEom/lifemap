@@ -1,19 +1,21 @@
-import { DayLog } from '../types';
+import { DayLog, Language } from '../types';
+import { getPlaceName, getPlaceNote, getDayTitle, getDayDailyNote } from './localeUtils';
 
 /**
  * Generates GPX XML string from DayLog
  */
-export function generateGpx(day: DayLog): string {
+export function generateGpx(day: DayLog, lang: Language = 'ko'): string {
   const dayDate = day?.date || new Date().toISOString().split('T')[0];
-  const dayTitle = day?.title || dayDate;
+  const dayTitle = getDayTitle(day, lang) || dayDate;
   const places = day?.places || [];
   const routePoints = day?.routePoints || [];
+  const dailyNote = getDayDailyNote(day, lang) || 'Daily trail';
 
   const waypointsXml = places
     .map(
       (p) => `  <wpt lat="${p.lat}" lon="${p.lng}">
-    <name>${escapeXml(p.name)}</name>
-    <desc>${escapeXml(p.note || '')}</desc>
+    <name>${escapeXml(getPlaceName(p, lang))}</name>
+    <desc>${escapeXml(getPlaceNote(p, lang))}</desc>
     <type>${p.category}</type>
   </wpt>`
     )
@@ -31,7 +33,7 @@ export function generateGpx(day: DayLog): string {
 <gpx version="1.1" creator="LifeMap" xmlns="http://www.topografix.com/GPX/1/1">
   <metadata>
     <name>LifeMap - ${dayDate}</name>
-    <desc>${escapeXml(day?.dailyNote || 'Daily trail')}</desc>
+    <desc>${escapeXml(dailyNote)}</desc>
     <time>${dayDate}T00:00:00Z</time>
   </metadata>
 ${waypointsXml}
@@ -47,20 +49,25 @@ ${trackpointsXml}
 /**
  * Generates CSV string of places visited
  */
-export function generateCsv(day: DayLog): string {
+export function generateCsv(day: DayLog, lang: Language = 'ko'): string {
   const dayDate = day?.date || '';
   const places = day?.places || [];
-  const headers = ['Date', 'Place Name', 'Category', 'Arrival', 'Departure', 'Duration(mins)', 'Latitude', 'Longitude', 'Note'];
+  const headers = lang === 'ko'
+    ? ['날짜', '장소명', '카테고리', '도착시간', '출발시간', '머문시간(분)', '위도', '경도', '메모']
+    : lang === 'ja'
+    ? ['日付', '場所名', 'カテゴリー', '到着時間', '出発時間', '滞在時間(分)', '緯度', '経度', 'メモ']
+    : ['Date', 'Place Name', 'Category', 'Arrival', 'Departure', 'Duration(mins)', 'Latitude', 'Longitude', 'Note'];
+
   const rows = places.map((p) => [
     dayDate,
-    `"${(p.name || '').replace(/"/g, '""')}"`,
+    `"${(getPlaceName(p, lang) || '').replace(/"/g, '""')}"`,
     p.category,
     p.arrivalTime,
     p.departureTime,
     p.durationMinutes,
     p.lat,
     p.lng,
-    `"${(p.note || '').replace(/"/g, '""')}"`,
+    `"${(getPlaceNote(p, lang) || '').replace(/"/g, '""')}"`,
   ]);
 
   return [headers.join(','), ...rows.map((r) => r.join(','))].join('\n');

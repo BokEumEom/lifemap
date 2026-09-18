@@ -4,6 +4,7 @@ import { DayLog, PlaceLog, AppSettings, PhotoItem } from '../types';
 import { translations } from '../i18n/translations';
 import { PALETTES } from '../utils/geoUtils';
 import { extractExifGps } from '../utils/locationService';
+import { getPlaceName } from '../utils/localeUtils';
 
 interface PhotoImportModalProps {
   isOpen: boolean;
@@ -190,17 +191,17 @@ export const PhotoImportModal: React.FC<PhotoImportModalProps> = ({
           {/* Target Place Selection */}
           <div className="pt-2 border-t border-stone-100 dark:border-stone-800">
             <label className="block text-xs font-bold text-stone-700 dark:text-stone-300 mb-1.5">
-              {settings.language === 'ko' ? '기존 장소에 사진 연결' : 'Link to Existing Place'}
+              {settings.language === 'ko' ? '기존 장소에 사진 연결' : settings.language === 'ja' ? '既存の場所に写真を紐付け' : 'Link to Existing Place'}
             </label>
             {places.length > 0 ? (
               <select
                 value={selectedPlaceId}
                 onChange={(e) => setSelectedPlaceId(e.target.value)}
-                className="w-full text-xs px-3 py-2.5 rounded-xl border border-stone-300 dark:border-stone-700 bg-stone-50 dark:bg-stone-800 text-stone-900 dark:text-stone-100 focus:ring-2 focus:ring-pink-500"
+                className="w-full text-xs px-3 py-2.5 rounded-xl border border-stone-300 dark:border-stone-700 bg-stone-50 dark:bg-stone-800 text-stone-900 dark:text-stone-100 focus:ring-2 focus:ring-pink-500 font-medium"
               >
                 {places.map((p) => (
                   <option key={p.id} value={p.id}>
-                    [{p.arrivalTime}] {settings.language === 'en' && p.nameEn ? p.nameEn : p.name}
+                    [{p.arrivalTime}] {getPlaceName(p, settings.language)}
                   </option>
                 ))}
               </select>
@@ -208,6 +209,8 @@ export const PhotoImportModal: React.FC<PhotoImportModalProps> = ({
               <p className="text-xs text-stone-400 italic">
                 {settings.language === 'ko'
                   ? '기록된 기존 장소가 없습니다. 아래 버튼을 눌러 새 장소로 등록하세요.'
+                  : settings.language === 'ja'
+                  ? '記録された場所がありません。下のボタンから新しい場所を登録してください。'
                   : 'No existing places logged yet.'}
               </p>
             )}
@@ -222,7 +225,7 @@ export const PhotoImportModal: React.FC<PhotoImportModalProps> = ({
             className="px-3 py-2 text-xs font-bold rounded-xl border border-pink-300 dark:border-pink-800 text-pink-700 dark:text-pink-300 hover:bg-pink-50 dark:hover:bg-pink-950/50 transition active:scale-95 disabled:opacity-40 flex items-center gap-1"
           >
             <Plus className="w-3.5 h-3.5" />
-            <span>{settings.language === 'ko' ? '새 장소로 등록' : 'New Place'}</span>
+            <span>{settings.language === 'ko' ? '새 장소로 등록' : settings.language === 'ja' ? '新しい場所として登録' : 'New Place'}</span>
           </button>
 
           <div className="flex items-center gap-2">
@@ -238,7 +241,7 @@ export const PhotoImportModal: React.FC<PhotoImportModalProps> = ({
               className="px-4 py-2 text-xs font-bold rounded-xl text-white shadow-md hover:shadow-lg transition active:scale-95 disabled:opacity-50"
               style={{ backgroundColor: activePalette.primary }}
             >
-              {settings.language === 'ko' ? '연결 완료' : 'Confirm'}
+              {settings.language === 'ko' ? '연결 완료' : settings.language === 'ja' ? '追加完了' : 'Confirm'}
             </button>
           </div>
         </div>

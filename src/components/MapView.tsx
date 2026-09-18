@@ -26,7 +26,7 @@ import {
 import { DayLog, PlaceLog, AppSettings, MapStyle } from '../types';
 import { translations, formatDayTitle } from '../i18n/translations';
 import { PALETTES, applyPrivacyPrecision } from '../utils/geoUtils';
-import { getPlaceName, getPlaceAddress, getPlaceNote, formatDayStatsSummary } from '../utils/localeUtils';
+import { getPlaceName, getPlaceAddress, getPlaceNote, formatDayStatsSummary, getDayTitle, getAiRecap } from '../utils/localeUtils';
 import { getCurrentGpsPosition } from '../utils/locationService';
 import { generate3DBuildings } from '../utils/building3DService';
 import { ThreeDBuildingCanvas } from './ThreeDBuildingCanvas';
@@ -912,10 +912,14 @@ export const MapView: React.FC<MapViewProps> = ({
             {/* Title & Mood Chip */}
             <div className="flex items-center justify-between mb-2">
               <span className="text-xs font-bold text-stone-700 dark:text-stone-300 truncate max-w-[260px] sm:max-w-none">
-                {dayLog?.titleKo || dayLog?.title || '성수동 & 서울숲 감성 골목 투어'}
+                {getDayTitle(dayLog, settings.language)}
               </span>
               <span className="text-[10px] font-semibold text-pink-600 dark:text-pink-400 bg-pink-50 dark:bg-pink-950/60 px-2 py-0.5 rounded-full flex-shrink-0">
-                {dayLog?.places.length || 0}개 장소 순서대로
+                {settings.language === 'ko'
+                  ? `${dayLog?.places.length || 0}개 장소 순서대로`
+                  : settings.language === 'ja'
+                  ? `${dayLog?.places.length || 0}箇所の記録`
+                  : `${dayLog?.places.length || 0} spots in order`}
               </span>
             </div>
 
@@ -1009,38 +1013,41 @@ export const MapView: React.FC<MapViewProps> = ({
         {sheetSnap === 'expanded' && (
           <div className="flex-1 overflow-y-auto px-4 py-3 space-y-4 animate-in fade-in duration-200">
             {/* 1. AI 하루 회고 카드 (Daily Recap Card - Apple Intelligence Style) */}
-            {dayLog?.aiRecap && (
-              <div className="relative overflow-hidden rounded-3xl p-4 bg-gradient-to-br from-pink-500/10 via-purple-500/5 to-amber-500/10 border border-pink-200/80 dark:border-pink-900/50 shadow-sm">
-                <div className="flex items-center justify-between mb-2">
-                  <div className="flex items-center gap-1.5 text-pink-600 dark:text-pink-400 font-black text-xs">
-                    <Sparkles className="w-4 h-4 animate-pulse" />
-                    <span>오늘의 AI 하루 회고</span>
-                  </div>
-                  <span className="text-[10px] text-stone-400 font-mono">
-                    {dayLog.places.length} Spots · {movementKm} km · {dayLog.steps?.toLocaleString() || 14820} 걸음
-                  </span>
-                </div>
-
-                <p className="text-xs sm:text-sm font-semibold text-stone-800 dark:text-stone-200 leading-relaxed mb-3">
-                  {dayLog.aiRecap.recapKo || dayLog.aiRecap.recap}
-                </p>
-
-                <div className="flex flex-wrap items-center gap-2 pt-2 border-t border-pink-200/50 dark:border-pink-900/30">
-                  <div className="flex items-center gap-1 bg-white/80 dark:bg-stone-800/80 px-2.5 py-1 rounded-full text-[11px] font-bold text-stone-700 dark:text-stone-300 shadow-xs">
-                    <span>✨ 무드:</span>
-                    <span className="text-pink-600 dark:text-pink-400 font-extrabold">
-                      {dayLog.aiRecap.moodKo || dayLog.aiRecap.mood}
+            {dayLog?.aiRecap && (() => {
+              const recapData = getAiRecap(dayLog, settings.language);
+              return (
+                <div className="relative overflow-hidden rounded-3xl p-4 bg-gradient-to-br from-pink-500/10 via-purple-500/5 to-amber-500/10 border border-pink-200/80 dark:border-pink-900/50 shadow-sm">
+                  <div className="flex items-center justify-between mb-2">
+                    <div className="flex items-center gap-1.5 text-pink-600 dark:text-pink-400 font-black text-xs">
+                      <Sparkles className="w-4 h-4 animate-pulse" />
+                      <span>{t.timeline.aiRecapTitle || (settings.language === 'ko' ? '오늘의 AI 하루 회고' : settings.language === 'ja' ? '本日のAI振り返り' : 'Daily AI Recap')}</span>
+                    </div>
+                    <span className="text-[10px] text-stone-400 font-mono">
+                      {dayLog.places.length} Spots · {movementKm} km · {dayLog.steps?.toLocaleString() || 14820} {settings.language === 'ko' ? '걸음' : settings.language === 'ja' ? '歩' : 'steps'}
                     </span>
                   </div>
-                  <div className="flex items-center gap-1 bg-white/80 dark:bg-stone-800/80 px-2.5 py-1 rounded-full text-[11px] font-bold text-stone-700 dark:text-stone-300 shadow-xs">
-                    <span>🌟 하이라이트:</span>
-                    <span className="text-stone-800 dark:text-stone-100">
-                      {dayLog.aiRecap.highlightKo || dayLog.aiRecap.highlight}
-                    </span>
+
+                  <p className="text-xs sm:text-sm font-semibold text-stone-800 dark:text-stone-200 leading-relaxed mb-3">
+                    {recapData.recap}
+                  </p>
+
+                  <div className="flex flex-wrap items-center gap-2 pt-2 border-t border-pink-200/50 dark:border-pink-900/30">
+                    <div className="flex items-center gap-1 bg-white/80 dark:bg-stone-800/80 px-2.5 py-1 rounded-full text-[11px] font-bold text-stone-700 dark:text-stone-300 shadow-xs">
+                      <span>{settings.language === 'ko' ? '✨ 무드:' : settings.language === 'ja' ? '✨ ムード:' : '✨ Mood:'}</span>
+                      <span className="text-pink-600 dark:text-pink-400 font-extrabold">
+                        {recapData.mood}
+                      </span>
+                    </div>
+                    <div className="flex items-center gap-1 bg-white/80 dark:bg-stone-800/80 px-2.5 py-1 rounded-full text-[11px] font-bold text-stone-700 dark:text-stone-300 shadow-xs">
+                      <span>{settings.language === 'ko' ? '🌟 하이라이트:' : settings.language === 'ja' ? '🌟 ハイライト:' : '🌟 Highlight:'}</span>
+                      <span className="text-stone-800 dark:text-stone-100">
+                        {recapData.highlight}
+                      </span>
+                    </div>
                   </div>
                 </div>
-              </div>
-            )}
+              );
+            })()}
 
             {/* 2. CHRONOLOGICAL TIMELINE LIST */}
             <div className="relative pl-6 space-y-4">

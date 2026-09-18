@@ -2,6 +2,7 @@ import React, { useState, useMemo } from 'react';
 import { Search, X, MapPin, Calendar, ArrowRight } from 'lucide-react';
 import { DayLog, PlaceLog, AppSettings } from '../types';
 import { translations, formatDayTitle } from '../i18n/translations';
+import { getPlaceName } from '../utils/localeUtils';
 
 interface SearchModalProps {
   isOpen: boolean;
@@ -45,13 +46,23 @@ export const SearchModal: React.FC<SearchModalProps> = ({
         return false;
       }
       if (!q) return true;
-      const matchName = place.name.toLowerCase().includes(q) || (place.nameEn && place.nameEn.toLowerCase().includes(q));
-      const matchNote = place.note && place.note.toLowerCase().includes(q);
-      const matchAddr = place.address && place.address.toLowerCase().includes(q);
+      const localizedName = getPlaceName(place, settings.language).toLowerCase();
+      const matchName =
+        localizedName.includes(q) ||
+        (place.name && place.name.toLowerCase().includes(q)) ||
+        (place.nameKo && place.nameKo.toLowerCase().includes(q)) ||
+        (place.nameJa && place.nameJa.toLowerCase().includes(q)) ||
+        (place.nameEn && place.nameEn.toLowerCase().includes(q));
+      const matchNote =
+        (place.noteKo && place.noteKo.toLowerCase().includes(q)) ||
+        (place.note && place.note.toLowerCase().includes(q));
+      const matchAddr =
+        (place.addressKo && place.addressKo.toLowerCase().includes(q)) ||
+        (place.address && place.address.toLowerCase().includes(q));
       const matchDate = date.includes(q);
       return matchName || matchNote || matchAddr || matchDate;
     });
-  }, [allPlaces, query, selectedFilter]);
+  }, [allPlaces, query, selectedFilter, settings.language]);
 
   if (!isOpen) return null;
 
@@ -118,6 +129,7 @@ export const SearchModal: React.FC<SearchModalProps> = ({
           ) : (
             filtered.map(({ date, place }) => {
               const cover = place.coverPhotoUrl || place.photos?.[0]?.url;
+              const placeName = getPlaceName(place, settings.language);
               return (
                 <div
                   key={`${date}-${place.id}`}
@@ -131,7 +143,7 @@ export const SearchModal: React.FC<SearchModalProps> = ({
                     {cover ? (
                       <img
                         src={cover}
-                        alt={place.name}
+                        alt={placeName}
                         className="w-11 h-11 rounded-xl object-cover flex-shrink-0 bg-stone-200 dark:bg-stone-800 shadow-sm"
                       />
                     ) : (
@@ -141,7 +153,7 @@ export const SearchModal: React.FC<SearchModalProps> = ({
                     )}
                     <div className="min-w-0">
                       <h4 className="text-xs font-bold text-stone-900 dark:text-stone-100 truncate group-hover:text-pink-600 transition">
-                        {place.name}
+                        {placeName}
                       </h4>
                       <p className="text-[11px] text-stone-400 dark:text-stone-500 truncate flex items-center gap-1.5 mt-0.5">
                         <Calendar className="w-3 h-3" />

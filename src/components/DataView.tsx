@@ -74,14 +74,14 @@ export const DataView: React.FC<DataViewProps> = ({
 
   // Export GPX for current day
   const handleExportGpx = () => {
-    const gpxContent = generateGpx(currentDayLog);
+    const gpxContent = generateGpx(currentDayLog, settings.language);
     downloadFile(gpxContent, `lifemap-${currentDate}.gpx`, 'application/gpx+xml');
     showToast(`${currentDate}.gpx exported`);
   };
 
   // Export CSV for current day
   const handleExportCsv = () => {
-    const csvContent = generateCsv(currentDayLog);
+    const csvContent = generateCsv(currentDayLog, settings.language);
     downloadFile(csvContent, `lifemap-places-${currentDate}.csv`, 'text/csv;charset=utf-8;');
     showToast(`${currentDate}.csv exported`);
   };
